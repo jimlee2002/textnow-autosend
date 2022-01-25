@@ -1,5 +1,5 @@
 const actionFunc = async (
-    username, password, cookies, recipient, message, captchaToken) => {
+    username, password, cookies, arrRecipient, message, captchaToken) => {
   console.log('TextNow bot start...');
   const path = require('path');
   const fs = require('fs').promises;
@@ -85,15 +85,22 @@ const actionFunc = async (
       console.log(`Failed to save cookies to file: ${error}`);
     }
 
-    // Select a conversation using recipient info
-    console.log('Selecting conversation...');
-    await textNowHelper.selectConversation(page, recipient);
+    try {
+      for (let i = 0, length = arrRecipient.length; i < length; i++) {
+        const strRecipient = arrRecipient[i]
+        // Select a conversation using recipient info
+        console.log(`Selecting conversation of recipient ${i+1} ...`);
+        await textNowHelper.selectConversation(page, strRecipient);
 
-    // Send a message to the current recipient
-    console.log('Sending message...');
-    await textNowHelper.sendMessage(page, message);
+        // Send a message to the current recipient
+        console.log(`Sending message to recipient ${i+1} ...`);
+        await textNowHelper.sendMessage(page, message);
 
-    console.log('Message sent!');
+        console.log(`Message sent to recipient ${i+1}!`);
+      }
+    } catch (error) {
+      console.log(`Failed to send the message: ${error}`);
+    }
     await browser.close();
   } catch (error) {
     console.log(error);
@@ -128,6 +135,7 @@ const actionFunc = async (
   const arrUsername = username.split('|');
   const arrPassword = password.split('|');
   const arrCookies = cookies.split('|');
+  const arrRecipient = recipient.split('|');
   if (arrUsername.length === arrPassword.length) {
     for (let i = 0, length = arrUsername.length; i < length; i++) {
       const strUsername = arrUsername[i];
@@ -135,7 +143,7 @@ const actionFunc = async (
       const strCookies = arrCookies[i];
       console.log(`User: ${strUsername} start...`);
       await actionFunc(strUsername, strPassword, strCookies,
-          recipient, message, captchaToken);
+        arrRecipient, message, captchaToken);
       console.log(`User: ${strUsername} end...`);
     }
   } else {
